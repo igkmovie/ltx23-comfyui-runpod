@@ -1,0 +1,15 @@
+# Runtime checkout and downloaded data stay on the RunPod volume.
+ComfyUI/
+models/
+outputs/
+input/
+custom_nodes/
+*.safetensors
+*.ckpt
+*.pt
+*.pth
+*.bin
+*.gguf
+__pycache__/
+.venv/
+

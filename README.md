@@ -28,9 +28,6 @@ before installing the public `gemma_3_12B_it_fp4_mixed.safetensors` encoder.
 It also verifies that PyTorch can see the Pod GPU and installs CUDA 12.8
 wheels only when the base image does not already provide usable CUDA support.
 
-After setup, start ComfyUI with:
-
-```bash
-cd /workspace/ComfyUI
-python3 main.py --listen 0.0.0.0 --port 8188
-```
+The setup script starts ComfyUI automatically on port `8188` after all
+models, dependencies, nodes, and workflow checks pass. Keep the terminal open
+while using the GUI.

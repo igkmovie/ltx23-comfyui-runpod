@@ -17,6 +17,9 @@ fi
 echo "==> Installing ComfyUI requirements"
 "${PYTHON}" -m pip install --upgrade pip
 "${PYTHON}" -m pip install -r "${COMFY_ROOT}/requirements.txt"
+# ComfyUI's asset database imports SQLAlchemy directly. Keep it explicit because
+# some base images do not install the transitive dependency from alembic.
+"${PYTHON}" -m pip install "sqlalchemy>=2.0" "alembic>=1.13"
 
 # Keep the CUDA PyTorch supplied by the RunPod image. If the base image does
 # not expose a usable CUDA build, install the matching public CUDA 12.8 wheels.
@@ -130,4 +133,7 @@ print(f"Workflow verification passed: {len(required)} node types, {len(refs)} mo
 PY
 
 echo
-echo "Setup complete. Restart ComfyUI, then open the LTX-2.3 workflow."
+echo "Setup complete. Starting ComfyUI on port ${COMFY_PORT:-8188}."
+exec "${PYTHON}" "${COMFY_ROOT}/main.py" \
+  --listen 0.0.0.0 \
+  --port "${COMFY_PORT:-8188}"

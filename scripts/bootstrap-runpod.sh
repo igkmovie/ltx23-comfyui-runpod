@@ -49,6 +49,17 @@ fi
 # upgrades Kornia back to the latest incompatible version.
 "${PYTHON}" -m pip install --force-reinstall --no-deps "kornia==0.7.4"
 
+echo "==> Installing RES4LYF for ClownSampler_Beta"
+if [[ ! -d "${COMFY_ROOT}/custom_nodes/RES4LYF/.git" ]]; then
+  git clone --depth 1 https://github.com/ClownsharkBatwing/RES4LYF.git \
+    "${COMFY_ROOT}/custom_nodes/RES4LYF"
+else
+  git -C "${COMFY_ROOT}/custom_nodes/RES4LYF" pull --ff-only
+fi
+if [[ -f "${COMFY_ROOT}/custom_nodes/RES4LYF/requirements.txt" ]]; then
+  "${PYTHON}" -m pip install -r "${COMFY_ROOT}/custom_nodes/RES4LYF/requirements.txt"
+fi
+
 echo "==> Creating model directories"
 mkdir -p \
   "${COMFY_ROOT}/models/checkpoints" \
@@ -90,8 +101,8 @@ ls -lh \
 
 echo "==> Installing the checked-in workflow"
 mkdir -p "${COMFY_ROOT}/user/default/workflows"
-cp "${PROJECT_ROOT}/workflows/LTX-2.3_Distilled_PublicGemma.json" \
-  "${COMFY_ROOT}/user/default/workflows/LTX-2.3_Distilled_PublicGemma.json"
+cp "${PROJECT_ROOT}/workflows/LTX-2.3_Distilled_NoLoRA.json" \
+  "${COMFY_ROOT}/user/default/workflows/LTX-2.3_Distilled_NoLoRA.json"
 
 echo "==> Verifying workflow has no missing models or node classes"
 "${PYTHON}" - "${COMFY_ROOT}" "${PROJECT_ROOT}" <<'PY'
@@ -102,7 +113,7 @@ import sys
 
 comfy_root = pathlib.Path(sys.argv[1])
 project_root = pathlib.Path(sys.argv[2])
-workflow_path = project_root / "workflows" / "LTX-2.3_Distilled_PublicGemma.json"
+workflow_path = project_root / "workflows" / "LTX-2.3_Distilled_NoLoRA.json"
 workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
 
 model_roots = [comfy_root / "models" / name for name in (

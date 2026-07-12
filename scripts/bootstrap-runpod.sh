@@ -89,5 +89,45 @@ mkdir -p "${COMFY_ROOT}/user/default/workflows"
 cp "${PROJECT_ROOT}/workflows/LTX-2.3_Distilled_PublicGemma.json" \
   "${COMFY_ROOT}/user/default/workflows/LTX-2.3_Distilled_PublicGemma.json"
 
+echo "==> Verifying workflow has no missing models or node classes"
+"${PYTHON}" - "${COMFY_ROOT}" "${PROJECT_ROOT}" <<'PY'
+import asyncio
+import json
+import pathlib
+import sys
+
+comfy_root = pathlib.Path(sys.argv[1])
+project_root = pathlib.Path(sys.argv[2])
+workflow_path = project_root / "workflows" / "LTX-2.3_Distilled_PublicGemma.json"
+workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
+
+model_roots = [comfy_root / "models" / name for name in (
+    "checkpoints", "text_encoders", "loras", "vae", "diffusion_models",
+)]
+refs = set()
+for node in workflow.get("nodes", []):
+    for value in node.get("widgets_values", []):
+        if isinstance(value, str) and value.endswith((".safetensors", ".ckpt", ".pt", ".pth")):
+            refs.add(value)
+
+missing_models = [
+    ref for ref in sorted(refs)
+    if not any((root / ref).is_file() for root in model_roots)
+]
+if missing_models:
+    raise SystemExit("Missing workflow models: " + ", ".join(missing_models))
+
+sys.path.insert(0, str(comfy_root))
+import nodes
+asyncio.run(nodes.init_extra_nodes(init_custom_nodes=True, init_api_nodes=False))
+available = set(nodes.NODE_CLASS_MAPPINGS)
+required = {node["type"] for node in workflow.get("nodes", [])}
+missing_nodes = sorted(required - available)
+if missing_nodes:
+    raise SystemExit("Missing workflow nodes: " + ", ".join(missing_nodes))
+
+print(f"Workflow verification passed: {len(required)} node types, {len(refs)} model files")
+PY
+
 echo
 echo "Setup complete. Restart ComfyUI, then open the LTX-2.3 workflow."

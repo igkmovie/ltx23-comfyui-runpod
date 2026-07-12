@@ -23,10 +23,12 @@ bash /workspace/ltx23-comfyui-runpod/scripts/bootstrap-runpod.sh
 The script is resumable. If a large model download stops, run it again and
 `curl -C -` continues from the existing file.
 
+The bootstrap removes the stale `gemma_3_12B_it_fp8_scaled.safetensors` file
+before installing the public `gemma_3_12B_it_fp4_mixed.safetensors` encoder.
+
 After setup, start ComfyUI with:
 
 ```bash
 cd /workspace/ComfyUI
 python3 main.py --listen 0.0.0.0 --port 8188
 ```
-

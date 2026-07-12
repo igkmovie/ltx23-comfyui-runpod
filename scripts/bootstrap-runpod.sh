@@ -37,6 +37,10 @@ mkdir -p \
   "${COMFY_ROOT}/models/loras" \
   "${COMFY_ROOT}/models/vae"
 
+# Remove the incompatible/stale encoder variant. ComfyUI may otherwise keep
+# selecting it instead of the public fp4 encoder used by this workflow.
+rm -f "${COMFY_ROOT}/models/text_encoders/gemma_3_12B_it_fp8_scaled.safetensors"
+
 download() {
   local url="$1"
   local destination="$2"
@@ -67,4 +71,3 @@ ls -lh \
 
 echo
 echo "Setup complete. Restart ComfyUI, then open the LTX-2.3 workflow."
-

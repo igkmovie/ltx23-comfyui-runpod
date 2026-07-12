@@ -32,10 +32,6 @@ fi
 
 "${PYTHON}" -c "import torch; print('PyTorch:', torch.__version__); print('CUDA:', torch.version.cuda); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'UNAVAILABLE'); raise SystemExit(0 if torch.cuda.is_available() else 1)"
 
-# The current LTXVideo pyramid code imports `pad`, which was removed from
-# newer Kornia releases. Keep the local and RunPod environments aligned.
-"${PYTHON}" -m pip install "kornia==0.7.4"
-
 echo "==> Installing official LTXVideo nodes"
 mkdir -p "${COMFY_ROOT}/custom_nodes"
 if [[ ! -d "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo/.git" ]]; then
@@ -47,6 +43,11 @@ fi
 if [[ -f "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo/requirements.txt" ]]; then
   "${PYTHON}" -m pip install -r "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo/requirements.txt"
 fi
+
+# The current LTXVideo pyramid code imports `pad`, which was removed from
+# newer Kornia releases. Pin this after the node requirements, which otherwise
+# upgrades Kornia back to the latest incompatible version.
+"${PYTHON}" -m pip install --force-reinstall "kornia==0.7.4"
 
 echo "==> Creating model directories"
 mkdir -p \

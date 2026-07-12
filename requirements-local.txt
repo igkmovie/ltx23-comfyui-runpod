@@ -1,0 +1,4 @@
+# LTXVideo currently imports pad from kornia.geometry.transform.pyramid.
+# Kornia 0.8+ removed that symbol.
+kornia==0.7.4
+

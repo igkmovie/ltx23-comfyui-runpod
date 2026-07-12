@@ -25,6 +25,8 @@ The script is resumable. If a large model download stops, run it again and
 
 The bootstrap removes the stale `gemma_3_12B_it_fp8_scaled.safetensors` file
 before installing the public `gemma_3_12B_it_fp4_mixed.safetensors` encoder.
+It also verifies that PyTorch can see the Pod GPU and installs CUDA 12.8
+wheels only when the base image does not already provide usable CUDA support.
 
 After setup, start ComfyUI with:
 

@@ -47,7 +47,7 @@ fi
 # The current LTXVideo pyramid code imports `pad`, which was removed from
 # newer Kornia releases. Pin this after the node requirements, which otherwise
 # upgrades Kornia back to the latest incompatible version.
-"${PYTHON}" -m pip install --force-reinstall "kornia==0.7.4"
+"${PYTHON}" -m pip install --force-reinstall --no-deps "kornia==0.7.4"
 
 echo "==> Creating model directories"
 mkdir -p \

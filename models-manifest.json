@@ -1,0 +1,14 @@
+{
+  "gemma_3_12B_it_fp4_mixed.safetensors": {
+    "subdir": "text_encoders",
+    "url": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true"
+  },
+  "ltx-2.3-22b-distilled-1.1.safetensors": {
+    "subdir": "checkpoints",
+    "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-1.1.safetensors?download=true"
+  },
+  "ltx-2.3-22b-distilled-fp8.safetensors": {
+    "subdir": "checkpoints",
+    "url": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-distilled-fp8.safetensors?download=true"
+  }
+}

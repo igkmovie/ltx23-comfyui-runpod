@@ -1,11 +1,44 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-COMFY_ROOT="/workspace/ComfyUI"
-PROJECT_ROOT="/workspace/ltx23-comfyui-runpod"
+# COMFY_ROOT/PROJECT_ROOT default to the RunPod persistent-volume convention
+# but can be overridden for other hosts (e.g. a GCP VM without /workspace):
+#   COMFY_ROOT=/opt/ComfyUI PROJECT_ROOT=/opt/ltx23-comfyui-runpod \
+#     bash scripts/bootstrap-runpod.sh <workflow-name>
+COMFY_ROOT="${COMFY_ROOT:-/workspace/ComfyUI}"
+PROJECT_ROOT="${PROJECT_ROOT:-/workspace/ltx23-comfyui-runpod}"
 PYTHON="${PYTHON:-python3}"
 
-mkdir -p /workspace
+usage() {
+  echo "Usage: $0 <workflow-name-or-path> [--no-start]" >&2
+  echo >&2
+  echo "Available workflows in ${PROJECT_ROOT}/workflows:" >&2
+  for f in "${PROJECT_ROOT}/workflows/"*.json; do
+    echo "  - $(basename "${f}" .json)" >&2
+  done
+}
+
+WORKFLOW_ARG="${1:-}"
+if [[ -z "${WORKFLOW_ARG}" ]]; then
+  usage
+  exit 1
+fi
+NO_START="${2:-}"
+
+if [[ -f "${WORKFLOW_ARG}" ]]; then
+  WORKFLOW_PATH="${WORKFLOW_ARG}"
+elif [[ -f "${PROJECT_ROOT}/workflows/${WORKFLOW_ARG}" ]]; then
+  WORKFLOW_PATH="${PROJECT_ROOT}/workflows/${WORKFLOW_ARG}"
+elif [[ -f "${PROJECT_ROOT}/workflows/${WORKFLOW_ARG}.json" ]]; then
+  WORKFLOW_PATH="${PROJECT_ROOT}/workflows/${WORKFLOW_ARG}.json"
+else
+  echo "Workflow not found: ${WORKFLOW_ARG}" >&2
+  usage
+  exit 1
+fi
+echo "==> Selected workflow: ${WORKFLOW_PATH}"
+
+mkdir -p "$(dirname "${COMFY_ROOT}")"
 
 echo "==> Preparing ComfyUI at ${COMFY_ROOT}"
 if [[ ! -d "${COMFY_ROOT}/.git" ]]; then
@@ -21,8 +54,8 @@ echo "==> Installing ComfyUI requirements"
 # some base images do not install the transitive dependency from alembic.
 "${PYTHON}" -m pip install "sqlalchemy>=2.0" "alembic>=1.13"
 
-# Keep the CUDA PyTorch supplied by the RunPod image. If the base image does
-# not expose a usable CUDA build, install the matching public CUDA 12.8 wheels.
+# Keep the CUDA PyTorch supplied by the base image. If it does not expose a
+# usable CUDA build, install the matching public CUDA 12.8 wheels.
 if ! "${PYTHON}" -c "import torch; raise SystemExit(0 if torch.cuda.is_available() else 1)"; then
   echo "CUDA PyTorch is unavailable; installing CUDA 12.8 wheels"
   "${PYTHON}" -m pip install --upgrade \
@@ -65,10 +98,11 @@ mkdir -p \
   "${COMFY_ROOT}/models/checkpoints" \
   "${COMFY_ROOT}/models/text_encoders" \
   "${COMFY_ROOT}/models/loras" \
-  "${COMFY_ROOT}/models/vae"
+  "${COMFY_ROOT}/models/vae" \
+  "${COMFY_ROOT}/models/diffusion_models"
 
 # Remove the incompatible/stale encoder variant. ComfyUI may otherwise keep
-# selecting it instead of the public fp4 encoder used by this workflow.
+# selecting it instead of the public fp4 encoder used by these workflows.
 rm -f "${COMFY_ROOT}/models/text_encoders/gemma_3_12B_it_fp8_scaled.safetensors"
 
 download() {
@@ -84,71 +118,90 @@ download() {
   mv "${destination}.part" "${destination}"
 }
 
-# Public Comfy-Org quantized Gemma encoder; avoids the gated Google repo.
-download \
-  "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true" \
-  "${COMFY_ROOT}/models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors"
+echo "==> Resolving models required by $(basename "${WORKFLOW_PATH}")"
+# Prints "filename<TAB>subdir<TAB>url" for every model file the selected
+# workflow references, looked up in models-manifest.json. Fails loudly if a
+# referenced file has no manifest entry (or the entry still has a TODO url),
+# instead of silently skipping the download - run
+# scripts/register-workflow-models.py to scaffold missing entries.
+MODEL_LINES="$("${PYTHON}" - "${WORKFLOW_PATH}" "${PROJECT_ROOT}/models-manifest.json" <<'PY'
+import json
+import sys
 
-# LTX-2.3 distilled checkpoint. This is a large download (about 43 GB).
-download \
-  "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-1.1.safetensors?download=true" \
-  "${COMFY_ROOT}/models/checkpoints/ltx-2.3-22b-distilled-1.1.safetensors"
+workflow_path, manifest_path = sys.argv[1], sys.argv[2]
+workflow = json.loads(open(workflow_path, encoding="utf-8").read())
+manifest = json.loads(open(manifest_path, encoding="utf-8").read())
 
-echo "==> Verifying files"
-ls -lh \
-  "${COMFY_ROOT}/models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors" \
-  "${COMFY_ROOT}/models/checkpoints/ltx-2.3-22b-distilled-1.1.safetensors"
+refs = set()
+for node in workflow.get("nodes", []):
+    for value in node.get("widgets_values", []):
+        if isinstance(value, str) and value.endswith((".safetensors", ".ckpt", ".pt", ".pth")):
+            refs.add(value)
 
-echo "==> Installing the checked-in workflows"
+missing = sorted(r for r in refs if r not in manifest)
+if missing:
+    sys.exit(
+        "No manifest entry for: " + ", ".join(missing) +
+        "\nRun: python scripts/register-workflow-models.py " + workflow_path
+    )
+
+todo = sorted(r for r in refs if manifest[r].get("url", "").startswith("TODO"))
+if todo:
+    sys.exit(
+        "models-manifest.json has a TODO url for: " + ", ".join(todo) +
+        f"\nFill in the real download url(s) in {manifest_path} first."
+    )
+
+for ref in sorted(refs):
+    entry = manifest[ref]
+    print(f"{ref}\t{entry['subdir']}\t{entry['url']}")
+PY
+)"
+
+while IFS=$'\t' read -r name subdir url; do
+  [[ -z "${name}" ]] && continue
+  mkdir -p "${COMFY_ROOT}/models/${subdir}"
+  download "${url}" "${COMFY_ROOT}/models/${subdir}/${name}"
+done <<< "${MODEL_LINES}"
+
+echo "==> Verifying downloaded files"
+while IFS=$'\t' read -r name subdir url; do
+  [[ -z "${name}" ]] && continue
+  ls -lh "${COMFY_ROOT}/models/${subdir}/${name}"
+done <<< "${MODEL_LINES}"
+
+echo "==> Installing workflows"
 mkdir -p "${COMFY_ROOT}/user/default/workflows"
 cp "${PROJECT_ROOT}/workflows/"*.json "${COMFY_ROOT}/user/default/workflows/"
 
-echo "==> Verifying workflows have no missing models or node classes"
-"${PYTHON}" - "${COMFY_ROOT}" "${PROJECT_ROOT}" <<'PY'
+echo "==> Verifying the selected workflow has no missing node classes"
+"${PYTHON}" - "${COMFY_ROOT}" "${WORKFLOW_PATH}" <<'PY'
 import asyncio
 import json
 import pathlib
 import sys
 
 comfy_root = pathlib.Path(sys.argv[1])
-project_root = pathlib.Path(sys.argv[2])
-
-model_roots = [comfy_root / "models" / name for name in (
-    "checkpoints", "text_encoders", "loras", "vae", "diffusion_models",
-)]
+workflow_path = pathlib.Path(sys.argv[2])
+workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
 
 sys.path.insert(0, str(comfy_root))
 import nodes
 asyncio.run(nodes.init_extra_nodes(init_custom_nodes=True, init_api_nodes=False))
 available = set(nodes.NODE_CLASS_MAPPINGS)
 
-errors = []
-for workflow_path in sorted((project_root / "workflows").glob("*.json")):
-    workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
-
-    refs = set()
-    for node in workflow.get("nodes", []):
-        for value in node.get("widgets_values", []):
-            if isinstance(value, str) and value.endswith((".safetensors", ".ckpt", ".pt", ".pth")):
-                refs.add(value)
-
-    missing_models = [
-        ref for ref in sorted(refs)
-        if not any((root / ref).is_file() for root in model_roots)
-    ]
-    required = {node["type"] for node in workflow.get("nodes", [])}
-    missing_nodes = sorted(required - available)
-
-    if missing_models:
-        errors.append(f"{workflow_path.name}: missing models: " + ", ".join(missing_models))
-    if missing_nodes:
-        errors.append(f"{workflow_path.name}: missing nodes: " + ", ".join(missing_nodes))
-    if not missing_models and not missing_nodes:
-        print(f"OK {workflow_path.name}: {len(required)} node types, {len(refs)} model files")
-
-if errors:
-    raise SystemExit("\n".join(errors))
+required = {node["type"] for node in workflow.get("nodes", [])}
+missing = sorted(required - available)
+if missing:
+    raise SystemExit("Missing node classes: " + ", ".join(missing))
+print(f"OK {workflow_path.name}: {len(required)} node types available")
 PY
+
+if [[ "${NO_START}" == "--no-start" ]]; then
+  echo
+  echo "Setup complete. Skipping ComfyUI start (--no-start)."
+  exit 0
+fi
 
 echo
 echo "Setup complete. Starting ComfyUI on port ${COMFY_PORT:-8188}."

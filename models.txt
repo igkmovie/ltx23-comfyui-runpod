@@ -1,5 +1,0 @@
-# Files downloaded by scripts/bootstrap-runpod.sh
-# Large model files are intentionally not committed to Git.
-models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors
-models/checkpoints/ltx-2.3-22b-distilled-1.1.safetensors
-

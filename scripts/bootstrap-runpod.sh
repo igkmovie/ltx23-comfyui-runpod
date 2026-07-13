@@ -99,12 +99,11 @@ ls -lh \
   "${COMFY_ROOT}/models/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors" \
   "${COMFY_ROOT}/models/checkpoints/ltx-2.3-22b-distilled-1.1.safetensors"
 
-echo "==> Installing the checked-in workflow"
+echo "==> Installing the checked-in workflows"
 mkdir -p "${COMFY_ROOT}/user/default/workflows"
-cp "${PROJECT_ROOT}/workflows/LTX-2.3_Distilled_NoLoRA.json" \
-  "${COMFY_ROOT}/user/default/workflows/LTX-2.3_Distilled_NoLoRA.json"
+cp "${PROJECT_ROOT}/workflows/"*.json "${COMFY_ROOT}/user/default/workflows/"
 
-echo "==> Verifying workflow has no missing models or node classes"
+echo "==> Verifying workflows have no missing models or node classes"
 "${PYTHON}" - "${COMFY_ROOT}" "${PROJECT_ROOT}" <<'PY'
 import asyncio
 import json
@@ -113,35 +112,42 @@ import sys
 
 comfy_root = pathlib.Path(sys.argv[1])
 project_root = pathlib.Path(sys.argv[2])
-workflow_path = project_root / "workflows" / "LTX-2.3_Distilled_NoLoRA.json"
-workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
 
 model_roots = [comfy_root / "models" / name for name in (
     "checkpoints", "text_encoders", "loras", "vae", "diffusion_models",
 )]
-refs = set()
-for node in workflow.get("nodes", []):
-    for value in node.get("widgets_values", []):
-        if isinstance(value, str) and value.endswith((".safetensors", ".ckpt", ".pt", ".pth")):
-            refs.add(value)
-
-missing_models = [
-    ref for ref in sorted(refs)
-    if not any((root / ref).is_file() for root in model_roots)
-]
-if missing_models:
-    raise SystemExit("Missing workflow models: " + ", ".join(missing_models))
 
 sys.path.insert(0, str(comfy_root))
 import nodes
 asyncio.run(nodes.init_extra_nodes(init_custom_nodes=True, init_api_nodes=False))
 available = set(nodes.NODE_CLASS_MAPPINGS)
-required = {node["type"] for node in workflow.get("nodes", [])}
-missing_nodes = sorted(required - available)
-if missing_nodes:
-    raise SystemExit("Missing workflow nodes: " + ", ".join(missing_nodes))
 
-print(f"Workflow verification passed: {len(required)} node types, {len(refs)} model files")
+errors = []
+for workflow_path in sorted((project_root / "workflows").glob("*.json")):
+    workflow = json.loads(workflow_path.read_text(encoding="utf-8"))
+
+    refs = set()
+    for node in workflow.get("nodes", []):
+        for value in node.get("widgets_values", []):
+            if isinstance(value, str) and value.endswith((".safetensors", ".ckpt", ".pt", ".pth")):
+                refs.add(value)
+
+    missing_models = [
+        ref for ref in sorted(refs)
+        if not any((root / ref).is_file() for root in model_roots)
+    ]
+    required = {node["type"] for node in workflow.get("nodes", [])}
+    missing_nodes = sorted(required - available)
+
+    if missing_models:
+        errors.append(f"{workflow_path.name}: missing models: " + ", ".join(missing_models))
+    if missing_nodes:
+        errors.append(f"{workflow_path.name}: missing nodes: " + ", ".join(missing_nodes))
+    if not missing_models and not missing_nodes:
+        print(f"OK {workflow_path.name}: {len(required)} node types, {len(refs)} model files")
+
+if errors:
+    raise SystemExit("\n".join(errors))
 PY
 
 echo

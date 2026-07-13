@@ -251,6 +251,11 @@ fi
 
 echo
 echo "Setup complete. Starting ComfyUI on port ${COMFY_PORT:-8188}."
+# --enable-cors-header disables ComfyUI's strict Host==Origin check. Without
+# it, requests through a reverse proxy (RunPod's proxy domain, GCP load
+# balancer, etc.) get a 403 because the Host header (the proxy's hostname)
+# never matches the Origin header the browser sends.
 exec "${PYTHON}" "${COMFY_ROOT}/main.py" \
   --listen 0.0.0.0 \
-  --port "${COMFY_PORT:-8188}"
+  --port "${COMFY_PORT:-8188}" \
+  --enable-cors-header

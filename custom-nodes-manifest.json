@@ -1,0 +1,21 @@
+{
+  "repos": {
+    "ComfyUI-LTXVideo": {
+      "git_url": "https://github.com/Lightricks/ComfyUI-LTXVideo.git",
+      "revision": "aceeae9635f6d493f2893ba3c411a1c36031788a"
+    },
+    "RES4LYF": {
+      "git_url": "https://github.com/ClownsharkBatwing/RES4LYF.git",
+      "revision": "419de2d7c78f415dde9aa352a7231820ebfc17a4"
+    }
+  },
+  "node_types": {
+    "LTXVImgToVideoConditionOnly": "ComfyUI-LTXVideo",
+    "LTXVTiledVAEDecode": "ComfyUI-LTXVideo",
+    "GemmaAPITextEncode": "ComfyUI-LTXVideo",
+    "MultimodalGuider": "ComfyUI-LTXVideo",
+    "GuiderParameters": "ComfyUI-LTXVideo",
+    "LTXFloatToInt": "ComfyUI-LTXVideo",
+    "ClownSampler_Beta": "RES4LYF"
+  }
+}

@@ -1,30 +1,30 @@
-# LTX-2.3 ComfyUI on RunPod (and other GPU hosts)
+# LTX-2.3 ComfyUI on RunPod(その他のGPUホストでも可)
 
-This repository contains a reproducible setup for a clean GPU host running
-ComfyUI with LTX-2.3 workflows. It intentionally does **not** store the
-ComfyUI checkout or model files in Git - the bootstrap script downloads
-exactly what the workflow you choose needs, at setup time.
+このリポジトリは、LTX-2.3のワークフローを動かすComfyUIをクリーンなGPUホスト上に
+再現するためのセットアップ一式です。ComfyUI本体やモデルファイルは意図的にGit管理
+していません — セットアップ時に、選んだワークフローが必要とするものだけを
+bootstrapスクリプトがダウンロードします。
 
-## Target host
+## 対象ホスト
 
-- GPU: A40 48 GB (or another GPU with at least 48 GB VRAM for the bf16
-  checkpoint; the `fp8` checkpoint fits smaller GPUs)
-- RunPod image: `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404` with a
-  persistent volume mounted at `/workspace`
-- Also works on a plain GPU VM (e.g. GCP Compute Engine with a CUDA-capable
-  image) - see "Other hosts" below.
+- GPU: A40 48GB(bf16チェックポイントの場合。48GB以上のVRAMが目安。`fp8`
+  チェックポイントならもっと小さいGPUでも収まります)
+- RunPodイメージ: `runpod/pytorch:1.0.2-cu1281-torch280-ubuntu2404`、
+  `/workspace` に永続ボリュームをマウント
+- 普通のGPU VM(例: CUDA対応イメージのGCP Compute Engine)でも動作します —
+  詳細は下の「他のホスト」を参照。
 
-## Setup
+## セットアップ
 
-From the host terminal:
+ホストのターミナルから:
 
 ```bash
 git clone https://github.com/igkmovie/ltx23-comfyui-runpod.git /workspace/ltx23-comfyui-runpod
 bash /workspace/ltx23-comfyui-runpod/scripts/bootstrap-runpod.sh <workflow-name>
 ```
 
-`<workflow-name>` is any file in `workflows/` (with or without the `.json`
-suffix), for example:
+`<workflow-name>` は `workflows/` 内の任意のファイル名です(`.json` の有無は
+どちらでも可)。例:
 
 ```bash
 bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_I2V_Simple
@@ -32,63 +32,84 @@ bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_I2V_Simple_FP8
 bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_NoLoRA
 ```
 
-Running the script with no argument prints usage and the list of available
-workflows.
+引数なしで実行すると、使い方と利用可能なワークフロー一覧が表示されます。
 
-The script only downloads the models the *selected* workflow actually
-references (resolved via `models-manifest.json`), then copies every
-workflow in `workflows/` into ComfyUI so you can switch between them from
-the UI once their models are present. It is resumable - if a large model
-download stops, run it again and `curl -C -` continues from the existing
-file.
+このスクリプトは**選択したワークフローが実際に参照しているモデルだけ**を
+(`models-manifest.json` で名前引きして)ダウンロードし、その後 `workflows/`
+内の全ワークフローをComfyUIにコピーします(モデルさえ揃えば、UI上で他の
+ワークフローにも切り替えられます)。ダウンロードは再開可能です — 大きなモデル
+の途中でダウンロードが止まっても、もう一度実行すれば `curl -C -` が続きから
+再開します。
 
-Pass `--no-start` as a second argument to skip launching ComfyUI (useful for
-pre-warming a host without starting the server yet).
+**カスタムノードも同じ発想で解決されます。** ComfyUI本体のコア組み込み
+ノードだけで選択したワークフローの要求を満たせるか確認し、足りない場合だけ
+`custom-nodes-manifest.json` を名前引きして必要なリポジトリ(現状
+`ComfyUI-LTXVideo`, `RES4LYF`)だけをクローンします。各リポジトリは
+マニフェストに記録された特定のコミット(`revision`)にチェックアウトされ、
+上流の最新コミットを無条件に追従することはありません。
 
-### Available workflows
+第2引数に `--no-start` を渡すと、ComfyUIの起動をスキップします(サーバーを
+起動せずにホストを事前に温めておきたい場合に便利です)。
 
-| Workflow | Notes |
+### 利用可能なワークフロー
+
+| ワークフロー | 説明 |
 |---|---|
-| `LTX-2.3_Distilled_I2V_Simple` | Single-path image-to-video, no audio output, bf16 checkpoint (~46 GB). Recommended starting point. |
-| `LTX-2.3_Distilled_I2V_Simple_FP8` | Same graph, fp8-quantized checkpoint (~29.5 GB). Less data to read off disk, so the first checkpoint load into memory is noticeably faster. |
-| `LTX-2.3_Distilled_NoLoRA` | Full audio+video dual-path workflow (distilled + full quality branches). |
-| `LTX-2.3_Distilled_NoLoRA_NoAudio` | Same as above with the audio decode/save nodes removed. |
-| `LTX-2.3_Distilled_PublicGemma` | Dual-path workflow using the public Gemma text encoder path with explicit audio VAE decode. |
+| `LTX-2.3_Distilled_I2V_Simple` | 一本道のImage-to-Video、音声出力なし、bf16チェックポイント(約46GB)。まずはこれがおすすめ。 |
+| `LTX-2.3_Distilled_I2V_Simple_FP8` | 上と同じグラフで、fp8量子化チェックポイント(約29.5GB)。ディスクから読むデータ量が少ない分、初回のチェックポイント読み込みが体感でも速くなる。 |
+| `LTX-2.3_Distilled_NoLoRA` | 音声+映像のフル2系統ワークフロー(Distilled/Full品質の両ブランチ)。 |
+| `LTX-2.3_Distilled_NoLoRA_NoAudio` | 上と同じだが、音声デコード・保存ノードを削除したもの。 |
+| `LTX-2.3_Distilled_PublicGemma` | 公開版Gemmaテキストエンコーダーを使う2系統ワークフロー(音声VAEデコードあり)。 |
 
-### Adding a new workflow
+### 新しいワークフローを追加する
 
-1. Drop the workflow JSON into `workflows/`.
-2. Run `python scripts/register-workflow-models.py workflows/<name>.json` to
-   scaffold any new model filenames into `models-manifest.json` (guessed
-   subdir, `TODO` url placeholder).
-3. Fill in the real download url for each new entry in
-   `models-manifest.json`.
-4. `bash scripts/bootstrap-runpod.sh <name>` will now download exactly what
-   that workflow needs.
+1. ワークフローのJSONを `workflows/` に置く。
+2. `python scripts/register-workflow-models.py workflows/<name>.json` を実行し、
+   新しく出てきたモデルファイル名を `models-manifest.json` に雛形登録する
+   (保存先ディレクトリは推測、URLは `TODO` プレースホルダ)。
+3. 新規エントリそれぞれについて、`models-manifest.json` に実際のダウンロード
+   URLを記入する。
+4. `python scripts/register-workflow-nodes.py --comfy-root <ComfyUIのパス> workflows/<name>.json`
+   を実行し、コアで足りないノードクラスを確認する。未分類のクラスがあれば
+   `--write` を付けて再実行し、`custom-nodes-manifest.json` にTODOスタブを
+   追記する(`--write` を付けない限りファイルは一切変更されない)。
+5. 追記されたTODOエントリそれぞれについて、`custom-nodes-manifest.json` に
+   実際の `git_url` と(動作確認済みの)`revision` を記入する。
+6. これで `bash scripts/bootstrap-runpod.sh <name>` が、そのワークフローに
+   必要なモデル・カスタムノードだけを正しく解決するようになる。
 
-`bootstrap-runpod.sh` refuses to run (with a clear error pointing at
-`register-workflow-models.py`) if a workflow references a model with no
-manifest entry, or one whose url is still a `TODO` placeholder - it never
-silently skips a required download.
+ワークフローがどちらかのマニフェストに登録されていないモデル/ノードクラスを
+参照している場合や、エントリはあってもURL/リポジトリが `TODO` のままの場合、
+`bootstrap-runpod.sh` は対応するregisterスクリプトを指し示す明確なエラーで
+実行を拒否します — 必要なダウンロード/インストールを黙ってスキップすること
+はありません。
 
-### Other hosts (e.g. GCP)
+**既知の制限事項:**
+- 必要ノード・必要モデルの抽出はワークフローJSON内の全ノードを対象にし、
+  `mode`(無効化/ミュート状態)は見ません。
+- 複数のカスタムノードリポジトリが異なるバージョンの同じPythonパッケージを
+  要求する場合の依存関係解決は行いません(後からインストールした方が勝ちます)。
+- `custom-nodes-manifest.json` の `revision` は「動作確認済みの1点」を
+  記録しているだけで、上流の継続的な追従(自動更新)はしません。
 
-`COMFY_ROOT` and `PROJECT_ROOT` default to the RunPod `/workspace`
-convention but can be overridden for hosts that mount storage elsewhere:
+### 他のホスト(GCPなど)
+
+`COMFY_ROOT` と `PROJECT_ROOT` はデフォルトでRunPodの `/workspace` 規約に
+従いますが、別の場所にストレージをマウントするホスト向けに上書きできます:
 
 ```bash
 COMFY_ROOT=/opt/ComfyUI PROJECT_ROOT=/opt/ltx23-comfyui-runpod \
   bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_I2V_Simple
 ```
 
-Nothing else in the script is RunPod-specific - it just needs a Linux host
-with an NVIDIA GPU, git, curl, and Python 3.
+スクリプトの他の部分にRunPod固有の要素はなく、NVIDIA GPU・git・curl・
+Python 3が使えるLinuxホストであれば動作します。
 
-The bootstrap removes the stale `gemma_3_12B_it_fp8_scaled.safetensors` file
-before installing the public `gemma_3_12B_it_fp4_mixed.safetensors` encoder.
-It also verifies that PyTorch can see the GPU and installs CUDA 12.8 wheels
-only when the base image does not already provide usable CUDA support.
+bootstrapは、古い `gemma_3_12B_it_fp8_scaled.safetensors` ファイルを削除
+してから、公開版の `gemma_3_12B_it_fp4_mixed.safetensors` エンコーダーを
+導入します。また、PyTorchがGPUを認識できるか検証し、ベースイメージが
+まだ使えるCUDAを提供していない場合のみCUDA 12.8のwheelを導入します。
 
-The setup script starts ComfyUI automatically on port `8188` (override with
-`COMFY_PORT`) after all models, dependencies, nodes, and the selected
-workflow's checks pass. Keep the terminal open while using the GUI.
+セットアップスクリプトは、モデル・依存関係・カスタムノード・選択した
+ワークフローの検証が全て通った後、ポート `8188`(`COMFY_PORT` で上書き可)
+でComfyUIを自動起動します。GUIを使う間はターミナルを開いたままにしてください。

@@ -65,33 +65,79 @@ fi
 
 "${PYTHON}" -c "import torch; print('PyTorch:', torch.__version__); print('CUDA:', torch.version.cuda); print('GPU:', torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'UNAVAILABLE'); raise SystemExit(0 if torch.cuda.is_available() else 1)"
 
-echo "==> Installing official LTXVideo nodes"
+echo "==> Resolving custom node repositories required by $(basename "${WORKFLOW_PATH}")"
 mkdir -p "${COMFY_ROOT}/custom_nodes"
-if [[ ! -d "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo/.git" ]]; then
-  git clone --depth 1 https://github.com/Lightricks/ComfyUI-LTXVideo.git \
-    "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo"
-else
-  git -C "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo" pull --ff-only
-fi
-if [[ -f "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo/requirements.txt" ]]; then
-  "${PYTHON}" -m pip install -r "${COMFY_ROOT}/custom_nodes/ComfyUI-LTXVideo/requirements.txt"
-fi
+# Prints "repo_key<TAB>git_url<TAB>revision" for every custom-node repo the
+# selected workflow needs (i.e. node classes not already provided by
+# ComfyUI core), looked up in custom-nodes-manifest.json. Fails loudly if a
+# required node class has no manifest entry, or its manifest repo is still
+# a TODO-* placeholder - run scripts/register-workflow-nodes.py to
+# scaffold missing entries, instead of silently skipping the install.
+REQUIRED_REPOS="$("${PYTHON}" - "${COMFY_ROOT}" "${WORKFLOW_PATH}" "${PROJECT_ROOT}/custom-nodes-manifest.json" <<'PY'
+import asyncio
+import json
+import sys
 
-# The current LTXVideo pyramid code imports `pad`, which was removed from
-# newer Kornia releases. Pin this after the node requirements, which otherwise
-# upgrades Kornia back to the latest incompatible version.
-"${PYTHON}" -m pip install --force-reinstall --no-deps "kornia==0.7.4"
+comfy_root, workflow_path, manifest_path = sys.argv[1], sys.argv[2], sys.argv[3]
+workflow = json.loads(open(workflow_path, encoding="utf-8").read())
+manifest = json.loads(open(manifest_path, encoding="utf-8").read())
 
-echo "==> Installing RES4LYF for ClownSampler_Beta"
-if [[ ! -d "${COMFY_ROOT}/custom_nodes/RES4LYF/.git" ]]; then
-  git clone --depth 1 https://github.com/ClownsharkBatwing/RES4LYF.git \
-    "${COMFY_ROOT}/custom_nodes/RES4LYF"
-else
-  git -C "${COMFY_ROOT}/custom_nodes/RES4LYF" pull --ff-only
-fi
-if [[ -f "${COMFY_ROOT}/custom_nodes/RES4LYF/requirements.txt" ]]; then
-  "${PYTHON}" -m pip install -r "${COMFY_ROOT}/custom_nodes/RES4LYF/requirements.txt"
-fi
+required = {node["type"] for node in workflow.get("nodes", []) if "type" in node}
+
+sys.path.insert(0, comfy_root)
+import nodes
+asyncio.run(nodes.init_extra_nodes(init_custom_nodes=False, init_api_nodes=False))
+core_available = set(nodes.NODE_CLASS_MAPPINGS)
+
+missing = required - core_available
+node_types = manifest.get("node_types", {})
+repos = manifest.get("repos", {})
+
+unresolved = sorted(n for n in missing if n not in node_types)
+if unresolved:
+    sys.exit(
+        "No custom-nodes-manifest.json entry for: " + ", ".join(unresolved) +
+        "\nRun: python scripts/register-workflow-nodes.py --comfy-root " + comfy_root +
+        " --write " + workflow_path
+    )
+
+needed_repo_keys = sorted({node_types[n] for n in missing})
+todo_repos = sorted(k for k in needed_repo_keys if repos.get(k, {}).get("git_url", "").startswith("TODO"))
+if todo_repos:
+    sys.exit(
+        "custom-nodes-manifest.json has a TODO repo for: " + ", ".join(todo_repos) +
+        f"\nFill in the real git_url/revision in {manifest_path} first."
+    )
+
+for key in needed_repo_keys:
+    entry = repos[key]
+    print(f"{key}\t{entry['git_url']}\t{entry['revision']}")
+PY
+)"
+
+while IFS=$'\t' read -r repo_key git_url revision; do
+  [[ -z "${repo_key}" ]] && continue
+  repo_dir="${COMFY_ROOT}/custom_nodes/${repo_key}"
+  echo "==> Installing custom node repo: ${repo_key} @ ${revision}"
+  if [[ ! -d "${repo_dir}/.git" ]]; then
+    git clone "${git_url}" "${repo_dir}"
+  else
+    git -C "${repo_dir}" fetch origin
+  fi
+  git -C "${repo_dir}" checkout "${revision}"
+  if [[ -f "${repo_dir}/requirements.txt" ]]; then
+    "${PYTHON}" -m pip install -r "${repo_dir}/requirements.txt"
+  fi
+  if [[ "${repo_key}" == "ComfyUI-LTXVideo" ]]; then
+    # The LTXVideo pyramid code imports `pad`, which was removed from newer
+    # Kornia releases. Pin this after the node requirements, which otherwise
+    # upgrades Kornia back to the latest incompatible version. Applied
+    # whenever LTXVideo is a resolved dependency for this workflow, not
+    # only on a fresh clone, so an already-installed repo still ends up
+    # with a compatible Kornia version.
+    "${PYTHON}" -m pip install --force-reinstall --no-deps "kornia==0.7.4"
+  fi
+done <<< "${REQUIRED_REPOS}"
 
 echo "==> Creating model directories"
 mkdir -p \

@@ -3,6 +3,10 @@
     "subdir": "text_encoders",
     "url": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true"
   },
+  "high_noise.safetensors": {
+    "subdir": "diffusion_models",
+    "url": "https://huggingface.co/aidealab/AnimeGen-I2V/resolve/main/high_noise.safetensors?download=true"
+  },
   "ltx-2.3-22b-distilled-1.1.safetensors": {
     "subdir": "checkpoints",
     "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-1.1.safetensors?download=true"
@@ -10,5 +14,25 @@
   "ltx-2.3-22b-distilled-fp8.safetensors": {
     "subdir": "checkpoints",
     "url": "https://huggingface.co/Lightricks/LTX-2.3-fp8/resolve/main/ltx-2.3-22b-distilled-fp8.safetensors?download=true"
+  },
+  "low_noise.safetensors": {
+    "subdir": "diffusion_models",
+    "url": "https://huggingface.co/aidealab/AnimeGen-I2V/resolve/main/low_noise.safetensors?download=true"
+  },
+  "umt5_xxl_fp8_e4m3fn_scaled.safetensors": {
+    "subdir": "text_encoders",
+    "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true"
+  },
+  "wan2.2_i2v_lightning_high_noise.safetensors": {
+    "subdir": "loras",
+    "url": "https://huggingface.co/lightx2v/Wan2.2-Lightning/resolve/main/Wan2.2-I2V-A14B-4steps-lora-rank64-Seko-V1/high_noise_model.safetensors?download=true"
+  },
+  "wan2.2_i2v_lightning_low_noise.safetensors": {
+    "subdir": "loras",
+    "url": "https://huggingface.co/lightx2v/Wan2.2-Lightning/resolve/main/Wan2.2-I2V-A14B-4steps-lora-rank64-Seko-V1/low_noise_model.safetensors?download=true"
+  },
+  "wan_2.1_vae.safetensors": {
+    "subdir": "vae",
+    "url": "https://huggingface.co/Comfy-Org/Wan_2.2_ComfyUI_Repackaged/resolve/main/split_files/vae/wan_2.1_vae.safetensors?download=true"
   }
 }

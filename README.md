@@ -1,9 +1,9 @@
-# LTX-2.3 ComfyUI on RunPod(その他のGPUホストでも可)
+# LTX-2.3 / AnimeGen-I2V ComfyUI on RunPod(その他のGPUホストでも可)
 
-このリポジトリは、LTX-2.3のワークフローを動かすComfyUIをクリーンなGPUホスト上に
-再現するためのセットアップ一式です。ComfyUI本体やモデルファイルは意図的にGit管理
-していません — セットアップ時に、選んだワークフローが必要とするものだけを
-bootstrapスクリプトがダウンロードします。
+このリポジトリは、LTX-2.3およびAnimeGen-I2Vのワークフローを動かすComfyUIを
+クリーンなGPUホスト上に再現するためのセットアップ一式です。ComfyUI本体や
+モデルファイルは意図的にGit管理していません — セットアップ時に、選んだ
+ワークフローが必要とするものだけをbootstrapスクリプトがダウンロードします。
 
 ## 対象ホスト
 
@@ -30,6 +30,7 @@ bash /workspace/ltx23-comfyui-runpod/scripts/bootstrap-runpod.sh <workflow-name>
 bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_I2V_Simple
 bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_I2V_Simple_FP8
 bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_NoLoRA
+bash scripts/bootstrap-runpod.sh AnimeGen-I2V_832x480_5s
 ```
 
 引数なしで実行すると、使い方と利用可能なワークフロー一覧が表示されます。
@@ -55,11 +56,25 @@ bash scripts/bootstrap-runpod.sh LTX-2.3_Distilled_NoLoRA
 
 | ワークフロー | 説明 |
 |---|---|
+| `AnimeGen-I2V_832x480_5s` | AIdeaLab AnimeGen-I2Vによるアニメ向けImage-to-Video。入力画像から832×480・5秒・16fpsを生成し、high/low-noiseモデルを8ステップで切り替える。 |
 | `LTX-2.3_Distilled_I2V_Simple` | 一本道のImage-to-Video、音声出力なし、bf16チェックポイント(約46GB)。まずはこれがおすすめ。 |
 | `LTX-2.3_Distilled_I2V_Simple_FP8` | 上と同じグラフで、fp8量子化チェックポイント(約29.5GB)。ディスクから読むデータ量が少ない分、初回のチェックポイント読み込みが体感でも速くなる。 |
 | `LTX-2.3_Distilled_NoLoRA` | 音声+映像のフル2系統ワークフロー(Distilled/Full品質の両ブランチ)。 |
 | `LTX-2.3_Distilled_NoLoRA_NoAudio` | 上と同じだが、音声デコード・保存ノードを削除したもの。 |
 | `LTX-2.3_Distilled_PublicGemma` | 公開版Gemmaテキストエンコーダーを使う2系統ワークフロー(音声VAEデコードあり)。 |
+
+### AnimeGen-I2V
+
+`AnimeGen-I2V_832x480_5s`はT2Vではなく、`Load Image`で指定した画像を
+`WanImageToVideo`の開始画像として使うI2V専用ワークフローです。positive promptには
+画像の説明を繰り返すより、`gently blinks`、`turns her head`、
+`hair sways in the breeze`のように動作を英語で簡潔に指定してください。
+
+AnimeGenのhigh/low-noiseモデルだけで合計約57.2GBあります。LoRA、T5、
+VAE、ComfyUI環境を含め、クリーンなボリュームでも100GB以上の空きを推奨します。
+既存のLTX-2.3モデルを同じ永続ボリュームに残す場合は、bootstrap実行前に
+`df -h /workspace`で空き容量を確認してください。A40 48GBではComfyUIの
+モデルオフロードを利用する前提です。
 
 ### 新しいワークフローを追加する
 

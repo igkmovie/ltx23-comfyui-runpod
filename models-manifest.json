@@ -1,11 +1,11 @@
 {
   "2D_animation_effects_high_noise.safetensors": {
     "subdir": "loras",
-    "url": "MANUAL: bundled in a zip on Civitai (login required) - https://civitai.com/models/1920897/wan22-2d-animation-effects-2d - place the file manually in models/loras/ before running bootstrap"
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/2D_animation_effects_high_noise.safetensors"
   },
   "2D_animation_effects_low_noise.safetensors": {
     "subdir": "loras",
-    "url": "MANUAL: bundled in a zip on Civitai (login required) - https://civitai.com/models/1920897/wan22-2d-animation-effects-2d - place the file manually in models/loras/ before running bootstrap"
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/2D_animation_effects_low_noise.safetensors"
   },
   "gemma_3_12B_it_fp4_mixed.safetensors": {
     "subdir": "text_encoders",
@@ -17,7 +17,7 @@
   },
   "lightfix_selfattn_merged_NSFW-22-L-e8.safetensors": {
     "subdir": "loras",
-    "url": "MANUAL: Civitai download requires auth (login/API token) - place the file manually in models/loras/ before running bootstrap. Low-noise branch only; self-attention-only patch (blocks 0-9)."
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/lightfix_selfattn_merged_NSFW-22-L-e8.safetensors"
   },
   "ltx-2.3-22b-distilled-1.1.safetensors": {
     "subdir": "checkpoints",

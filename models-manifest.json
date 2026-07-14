@@ -15,10 +15,6 @@
     "subdir": "diffusion_models",
     "url": "https://huggingface.co/aidealab/AnimeGen-I2V/resolve/main/high_noise.safetensors?download=true"
   },
-  "lightfix_selfattn_merged_NSFW-22-L-e8.safetensors": {
-    "subdir": "loras",
-    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/lightfix_selfattn_merged_NSFW-22-L-e8.safetensors"
-  },
   "ltx-2.3-22b-distilled-1.1.safetensors": {
     "subdir": "checkpoints",
     "url": "https://huggingface.co/Lightricks/LTX-2.3/resolve/main/ltx-2.3-22b-distilled-1.1.safetensors?download=true"

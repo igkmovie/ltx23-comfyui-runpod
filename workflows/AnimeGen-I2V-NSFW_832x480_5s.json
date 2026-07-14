@@ -209,7 +209,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 25
+          "link": 24
         }
       ],
       "outputs": [
@@ -326,7 +326,7 @@
         {
           "name": "MASK",
           "type": "MASK",
-          "links": null
+          "links": []
         }
       ],
       "title": "I2V Start Image",
@@ -816,46 +816,6 @@
         "2D_animation_effects_low_noise.safetensors",
         1
       ]
-    },
-    {
-      "id": 20,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        -270,
-        -100
-      ],
-      "size": [
-        360,
-        82
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 24
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            25
-          ]
-        }
-      ],
-      "title": "NSFW Motion Fix LoRA (low only, self-attn)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "lightfix_selfattn_merged_NSFW-22-L-e8.safetensors",
-        1
-      ]
     }
   ],
   "links": [
@@ -1046,14 +1006,6 @@
     [
       24,
       19,
-      0,
-      20,
-      0,
-      "MODEL"
-    ],
-    [
-      25,
-      20,
       0,
       6,
       0,

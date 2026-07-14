@@ -7,10 +7,6 @@
     "subdir": "loras",
     "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/2D_animation_effects_low_noise.safetensors"
   },
-  "anime_style_wan22_i2v_low_noise.safetensors": {
-    "subdir": "loras",
-    "url": "TODO: fill in download URL"
-  },
   "gemma_3_12B_it_fp4_mixed.safetensors": {
     "subdir": "text_encoders",
     "url": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true"
@@ -38,6 +34,10 @@
   "umt5_xxl_fp8_e4m3fn_scaled.safetensors": {
     "subdir": "text_encoders",
     "url": "https://huggingface.co/Comfy-Org/Wan_2.1_ComfyUI_repackaged/resolve/main/split_files/text_encoders/umt5_xxl_fp8_e4m3fn_scaled.safetensors?download=true"
+  },
+  "wan2.2_i2v_animestyle_v2_low.safetensors": {
+    "subdir": "loras",
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/wan2.2_i2v_animestyle_v2_low.safetensors"
   },
   "wan2.2_i2v_high_noise_14B_fp8_scaled.safetensors": {
     "subdir": "diffusion_models",

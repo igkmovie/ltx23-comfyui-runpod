@@ -375,7 +375,7 @@
         "Node name for S&R": "CLIPTextEncode"
       },
       "widgets_values": [
-        "Japanese anime style. The character gently blinks and breathes. Their hair and clothing move subtly in a soft breeze. The composition and character design remain consistent."
+        "An1meStyl3. Japanese anime style. The character gently blinks and breathes. Their hair and clothing move subtly in a soft breeze. The composition and character design remain consistent."
       ]
     },
     {
@@ -858,46 +858,6 @@
       ]
     },
     {
-      "id": 21,
-      "type": "LoraLoaderModelOnly",
-      "pos": [
-        -370,
-        -500
-      ],
-      "size": [
-        360,
-        82
-      ],
-      "flags": {},
-      "order": 5,
-      "mode": 0,
-      "inputs": [
-        {
-          "name": "model",
-          "type": "MODEL",
-          "link": 2
-        }
-      ],
-      "outputs": [
-        {
-          "name": "MODEL",
-          "type": "MODEL",
-          "links": [
-            26
-          ]
-        }
-      ],
-      "title": "Anime Style LoRA (high)",
-      "properties": {
-        "cnr_id": "comfy-core",
-        "Node name for S&R": "LoraLoaderModelOnly"
-      },
-      "widgets_values": [
-        "anime_style_wan22_i2v_low_noise.safetensors",
-        1
-      ]
-    },
-    {
       "id": 22,
       "type": "LoraLoaderModelOnly",
       "pos": [
@@ -927,13 +887,13 @@
           ]
         }
       ],
-      "title": "Anime Style LoRA (low)",
+      "title": "Anime Style LoRA (low only)",
       "properties": {
         "cnr_id": "comfy-core",
         "Node name for S&R": "LoraLoaderModelOnly"
       },
       "widgets_values": [
-        "anime_style_wan22_i2v_low_noise.safetensors",
+        "wan2.2_i2v_animestyle_v2_low.safetensors",
         1
       ]
     }
@@ -951,7 +911,7 @@
       2,
       3,
       0,
-      21,
+      18,
       0,
       "MODEL"
     ],
@@ -1136,14 +1096,6 @@
       20,
       0,
       6,
-      0,
-      "MODEL"
-    ],
-    [
-      26,
-      21,
-      0,
-      18,
       0,
       "MODEL"
     ],

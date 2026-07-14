@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
+BOOTSTRAP_START="$(date +%s)"
+
 # COMFY_ROOT/PROJECT_ROOT default to the RunPod persistent-volume convention
 # but can be overridden for other hosts (e.g. a GCP VM without /workspace):
 #   COMFY_ROOT=/opt/ComfyUI PROJECT_ROOT=/opt/ltx23-comfyui-runpod \
@@ -243,19 +245,36 @@ if missing:
 print(f"OK {workflow_path.name}: {len(required)} node types available")
 PY
 
+elapsed() {
+  local secs=$(( $(date +%s) - BOOTSTRAP_START ))
+  printf '%dm%02ds' "$((secs / 60))" "$((secs % 60))"
+}
+
 if [[ "${NO_START}" == "--no-start" ]]; then
   echo
-  echo "Setup complete. Skipping ComfyUI start (--no-start)."
+  echo "Setup complete in $(elapsed). Skipping ComfyUI start (--no-start)."
   exit 0
 fi
 
 echo
-echo "Setup complete. Starting ComfyUI on port ${COMFY_PORT:-8188}."
+echo "Setup complete in $(elapsed). Starting ComfyUI on port ${COMFY_PORT:-8188}."
 # --enable-cors-header disables ComfyUI's strict Host==Origin check. Without
 # it, requests through a reverse proxy (RunPod's proxy domain, GCP load
 # balancer, etc.) get a 403 because the Host header (the proxy's hostname)
 # never matches the Origin header the browser sends.
-exec "${PYTHON}" "${COMFY_ROOT}/main.py" \
+"${PYTHON}" "${COMFY_ROOT}/main.py" \
   --listen 0.0.0.0 \
   --port "${COMFY_PORT:-8188}" \
-  --enable-cors-header
+  --enable-cors-header &
+COMFY_PID=$!
+
+# Reports total wall-clock time from script start once ComfyUI's HTTP server
+# actually answers requests, not just once the process is launched.
+(
+  until curl -sf "http://127.0.0.1:${COMFY_PORT:-8188}/" -o /dev/null 2>/dev/null; do
+    sleep 1
+  done
+  echo "==> ComfyUI is up. Total time from script start: $(elapsed)"
+) &
+
+wait "${COMFY_PID}"

@@ -160,10 +160,15 @@ download() {
     echo "exists: ${destination}"
     return
   fi
+  local start
+  start="$(date +%s)"
   echo "downloading: ${destination}"
-  curl -L --fail --retry 5 --retry-delay 5 -C - \
+  # --silent avoids interleaved progress meters when multiple downloads run
+  # in parallel; --show-error keeps error messages on failure.
+  curl -L --fail --silent --show-error --retry 5 --retry-delay 5 -C - \
     -o "${destination}.part" "${url}"
   mv "${destination}.part" "${destination}"
+  echo "done: ${destination} ($(( $(date +%s) - start ))s)"
 }
 
 echo "==> Resolving models required by $(basename "${WORKFLOW_PATH}")"
@@ -206,11 +211,31 @@ for ref in sorted(refs):
 PY
 )"
 
+# Downloads run in parallel (capped at MAX_PARALLEL_DOWNLOADS) since the
+# dominant cost is usually 2+ multi-GB files that would otherwise queue up
+# behind each other on a single connection.
+MAX_PARALLEL_DOWNLOADS="${MAX_PARALLEL_DOWNLOADS:-4}"
+DL_PIDS=()
+DL_NAMES=()
 while IFS=$'\t' read -r name subdir url; do
   [[ -z "${name}" ]] && continue
   mkdir -p "${COMFY_ROOT}/models/${subdir}"
-  download "${url}" "${COMFY_ROOT}/models/${subdir}/${name}"
+  while (( $(jobs -rp | wc -l) >= MAX_PARALLEL_DOWNLOADS )); do
+    wait -n
+  done
+  download "${url}" "${COMFY_ROOT}/models/${subdir}/${name}" &
+  DL_PIDS+=("$!")
+  DL_NAMES+=("${name}")
 done <<< "${MODEL_LINES}"
+
+DL_FAILED=0
+for i in "${!DL_PIDS[@]}"; do
+  if ! wait "${DL_PIDS[$i]}"; then
+    echo "Download failed: ${DL_NAMES[$i]}" >&2
+    DL_FAILED=1
+  fi
+done
+[[ "${DL_FAILED}" -eq 0 ]] || exit 1
 
 echo "==> Verifying downloaded files"
 while IFS=$'\t' read -r name subdir url; do

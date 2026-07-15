@@ -11,6 +11,10 @@
     "subdir": "loras",
     "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/NSFW-22-H-e8.safetensors"
   },
+  "lightfix_selfattn_merged_NSFW-22-L-e8.safetensors": {
+    "subdir": "loras",
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/lightfix_selfattn_merged_NSFW-22-L-e8.safetensors"
+  },
   "reverse_suspended_congress_I2V_high.safetensors": {
     "subdir": "loras",
     "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/reverse_suspended_congress_I2V_high.safetensors"

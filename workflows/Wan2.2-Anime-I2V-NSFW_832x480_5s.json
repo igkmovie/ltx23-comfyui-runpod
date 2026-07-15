@@ -1,8 +1,8 @@
 {
   "id": "a3cc987a-3437-4c58-a3b0-ff5f37311348",
   "revision": 0,
-  "last_node_id": 22,
-  "last_link_id": 27,
+  "last_node_id": 26,
+  "last_link_id": 31,
   "nodes": [
     {
       "id": 1,
@@ -170,7 +170,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 23
+          "link": 30
         }
       ],
       "outputs": [
@@ -209,7 +209,7 @@
         {
           "name": "model",
           "type": "MODEL",
-          "link": 24
+          "link": 31
         }
       ],
       "outputs": [
@@ -856,6 +856,166 @@
         "wan2.2_i2v_animestyle_v2_low.safetensors",
         1
       ]
+    },
+    {
+      "id": 23,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -270,
+        -650
+      ],
+      "size": [
+        360,
+        82
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 23
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            28
+          ]
+        }
+      ],
+      "title": "NSFW-22-H-e8 Motion LoRA (high)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "NSFW-22-H-e8.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 24,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -270,
+        -750
+      ],
+      "size": [
+        360,
+        82
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 28
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            29
+          ]
+        }
+      ],
+      "title": "Reverse Suspended Congress LoRA (high)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "reverse_suspended_congress_I2V_high.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 25,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -270,
+        -850
+      ],
+      "size": [
+        360,
+        82
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 29
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            30
+          ]
+        }
+      ],
+      "title": "Ultimate Deepthroat LoRA (high)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "wan22-ultimatedeepthroat-i2v-102epoc-high-k3nk.safetensors",
+        1
+      ]
+    },
+    {
+      "id": 26,
+      "type": "LoraLoaderModelOnly",
+      "pos": [
+        -270,
+        -100
+      ],
+      "size": [
+        360,
+        82
+      ],
+      "flags": {},
+      "order": 5,
+      "mode": 0,
+      "inputs": [
+        {
+          "name": "model",
+          "type": "MODEL",
+          "link": 24
+        }
+      ],
+      "outputs": [
+        {
+          "name": "MODEL",
+          "type": "MODEL",
+          "links": [
+            31
+          ]
+        }
+      ],
+      "title": "NSFW Motion Fix LoRA (low only, self-attn)",
+      "properties": {
+        "cnr_id": "comfy-core",
+        "Node name for S&R": "LoraLoaderModelOnly"
+      },
+      "widgets_values": [
+        "lightfix_selfattn_merged_NSFW-22-L-e8.safetensors",
+        1
+      ]
     }
   ],
   "links": [
@@ -1039,7 +1199,7 @@
       23,
       18,
       0,
-      5,
+      23,
       0,
       "MODEL"
     ],
@@ -1047,7 +1207,7 @@
       24,
       19,
       0,
-      6,
+      26,
       0,
       "MODEL"
     ],
@@ -1056,6 +1216,38 @@
       22,
       0,
       19,
+      0,
+      "MODEL"
+    ],
+    [
+      28,
+      23,
+      0,
+      24,
+      0,
+      "MODEL"
+    ],
+    [
+      29,
+      24,
+      0,
+      25,
+      0,
+      "MODEL"
+    ],
+    [
+      30,
+      25,
+      0,
+      5,
+      0,
+      "MODEL"
+    ],
+    [
+      31,
+      26,
+      0,
+      6,
       0,
       "MODEL"
     ]

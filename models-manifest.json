@@ -7,6 +7,18 @@
     "subdir": "loras",
     "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/2D_animation_effects_low_noise.safetensors"
   },
+  "NSFW-22-H-e8.safetensors": {
+    "subdir": "loras",
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/NSFW-22-H-e8.safetensors"
+  },
+  "reverse_suspended_congress_I2V_high.safetensors": {
+    "subdir": "loras",
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/reverse_suspended_congress_I2V_high.safetensors"
+  },
+  "wan22-ultimatedeepthroat-i2v-102epoc-high-k3nk.safetensors": {
+    "subdir": "loras",
+    "url": "https://storage.googleapis.com/creachat-trial-2026-wan22-loras-public/wan22-ultimatedeepthroat-i2v-102epoc-high-k3nk.safetensors"
+  },
   "gemma_3_12B_it_fp4_mixed.safetensors": {
     "subdir": "text_encoders",
     "url": "https://huggingface.co/Comfy-Org/ltx-2/resolve/main/split_files/text_encoders/gemma_3_12B_it_fp4_mixed.safetensors?download=true"
